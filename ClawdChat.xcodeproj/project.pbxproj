@@ -21,6 +21,7 @@
 		B5CE4DFC76450D9E86895A7A /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272B03533E734CE9D75F2BFD /* ChatStore.swift */; };
 		C2751B20431F9A723F577D7F /* CameraPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7775D11D6261BA20A2FC6E5B /* CameraPicker.swift */; };
 		C529BC25794C76568830E298 /* MoreTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F5EB84F351ECA0EA89B7838 /* MoreTools.swift */; };
+		C6D587B8E369678627481A80 /* DebugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ED02DDD3CFCC44824C277DF /* DebugLog.swift */; };
 		DAAC47E2FAC57EF3681AC363 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 89682A4822A92C4612CCF97E /* Assets.xcassets */; };
 		DAB59E1A4716504988A115D2 /* LLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E2B62063C3DA96AE1DF759 /* LLMEngine.swift */; };
 		DD16A3FECBD15075E1347984 /* ClawdChatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E42067BB9F1C98876F6E2AC6 /* ClawdChatApp.swift */; };
@@ -38,6 +39,7 @@
 		6CC4777FB298F7EE9C52B163 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7775D11D6261BA20A2FC6E5B /* CameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPicker.swift; sourceTree = "<group>"; };
 		78C9CEB47C6E392847BB4A00 /* WebTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebTools.swift; sourceTree = "<group>"; };
+		7ED02DDD3CFCC44824C277DF /* DebugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLog.swift; sourceTree = "<group>"; };
 		7F5EB84F351ECA0EA89B7838 /* MoreTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreTools.swift; sourceTree = "<group>"; };
 		89682A4822A92C4612CCF97E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A83402E4261F42B343D84C8A /* ClawdChat.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ClawdChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -117,6 +119,7 @@
 				89682A4822A92C4612CCF97E /* Assets.xcassets */,
 				0829F9A8A291B0EA8119F26D /* ClawdChat.entitlements */,
 				E42067BB9F1C98876F6E2AC6 /* ClawdChatApp.swift */,
+				7ED02DDD3CFCC44824C277DF /* DebugLog.swift */,
 				6CC4777FB298F7EE9C52B163 /* Info.plist */,
 				55CD46338CCA5F587768A360 /* LLM */,
 				85F41EEB0BB61BC81BAACEF2 /* Models */,
@@ -221,6 +224,7 @@
 				B5CE4DFC76450D9E86895A7A /* ChatStore.swift in Sources */,
 				A27FDF59CB65D1FE7D970A7E /* ChatView.swift in Sources */,
 				DD16A3FECBD15075E1347984 /* ClawdChatApp.swift in Sources */,
+				C6D587B8E369678627481A80 /* DebugLog.swift in Sources */,
 				DAB59E1A4716504988A115D2 /* LLMEngine.swift in Sources */,
 				4C0CAEAF1F47D86469F4D001 /* MLXEngine.swift in Sources */,
 				6C277AEB03083BF7B667D3EF /* MessageBubble.swift in Sources */,

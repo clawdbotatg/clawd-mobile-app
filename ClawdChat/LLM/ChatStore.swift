@@ -58,15 +58,18 @@ final class ChatStore {
         let index = messages.count - 1
         isGenerating = true
         let ciImage = image.flatMap { CIImage(image: $0) }
+        DebugLog.log("send: \"\(prompt)\"\(image != nil ? " +image" : "")")
 
         generationTask = Task {
             do {
                 for try await chunk in engine.respond(to: prompt, image: ciImage) {
                     messages[index].text += chunk
                 }
+                DebugLog.log("reply done (\(messages[index].text.count) chars)")
             } catch is CancellationError {
-                // User tapped stop; keep whatever was generated.
+                DebugLog.log("generation cancelled by user")
             } catch {
+                DebugLog.log("generation error: \(error)")
                 messages[index].text += "\n\n⚠️ \(error.localizedDescription)"
             }
             isGenerating = false

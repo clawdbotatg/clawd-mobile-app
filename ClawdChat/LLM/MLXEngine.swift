@@ -65,18 +65,18 @@ final class MLXEngine: LLMEngine {
         // per-app memory budget.
         MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
 
-        print("[ClawdChat] load() starting, model: \(Self.model.name)")
+        DebugLog.log("load() starting, model: \(Self.model.name)")
         let container = try await #huggingFaceLoadModelContainer(
             configuration: Self.model,
             progressHandler: { progress in
                 let fraction = progress.fractionCompleted
-                print("[ClawdChat] download progress: \(fraction) (\(progress.completedUnitCount)/\(progress.totalUnitCount))")
+                DebugLog.log("download progress: \(fraction) (\(progress.completedUnitCount)/\(progress.totalUnitCount))")
                 Task { @MainActor in
                     onProgress(fraction)
                 }
             }
         )
-        print("[ClawdChat] model container loaded")
+        DebugLog.log("model container loaded")
         self.container = container
         reset()
     }
@@ -97,7 +97,7 @@ final class MLXEngine: LLMEngine {
             ),
             tools: PhoneTools.specs + WebTools.specs + MoreTools.specs,
             toolDispatch: { call in
-                print("[ClawdChat] tool call: \(call.function.name) args: \(call.function.arguments)")
+                DebugLog.log("tool call: \(call.function.name) args: \(call.function.arguments)")
                 let result: String
                 if let webResult = await WebTools.dispatch(call) {
                     result = webResult
@@ -106,7 +106,7 @@ final class MLXEngine: LLMEngine {
                 } else {
                     result = await PhoneTools.dispatch(call)
                 }
-                print("[ClawdChat] tool result: \(result.prefix(300))")
+                DebugLog.log("tool result: \(result.prefix(300))")
                 return result
             }
         )
@@ -123,12 +123,12 @@ final class MLXEngine: LLMEngine {
             Task {
                 do {
                     for try await chunk in upstream {
-                        print("[ClawdChat] chunk: \(chunk.debugDescription)")
+                        DebugLog.log("chunk: \(chunk.debugDescription)")
                         continuation.yield(chunk)
                     }
                     continuation.finish()
                 } catch {
-                    print("[ClawdChat] stream error: \(error)")
+                    DebugLog.log("stream error: \(error)")
                     continuation.finish(throwing: error)
                 }
             }
