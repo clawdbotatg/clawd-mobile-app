@@ -1,14 +1,8 @@
 import Foundation
-import MLX
-import MLXLLM
-import MLXLMCommon
-import MLXHuggingFace
-import HuggingFace
-import Tokenizers
 
-/// Owns the on-device model lifecycle (download → load → chat) and the
-/// message list the UI renders. Everything runs locally; the only network
-/// use is the one-time weights download from Hugging Face.
+/// Owns the model lifecycle (download → load → chat) and the message list
+/// the UI renders. The actual generation backend is an `LLMEngine`:
+/// MLX on device, a mock in the simulator.
 @Observable
 @MainActor
 final class ChatStore {
@@ -23,41 +17,26 @@ final class ChatStore {
     private(set) var messages: [ChatMessage] = []
     private(set) var isGenerating = false
 
-    private var container: ModelContainer?
-    private var session: ChatSession?
+    private let engine: LLMEngine
     private var generationTask: Task<Void, Never>?
 
-    /// Swap the model by pointing at any entry in `LLMRegistry` (or a custom
-    /// `ModelConfiguration(id: "mlx-community/…")`). 4-bit ~2B models are the
-    /// sweet spot for current iPhones.
-    static let model = LLMRegistry.qwen3_5_2b_4bit
-
-    private static let instructions =
-        "You are a helpful assistant running fully on-device on an iPhone. Be concise."
-
-    var modelName: String {
-        "\(Self.model.name)"
+    init() {
+        #if targetEnvironment(simulator)
+        engine = MockEngine()
+        #else
+        engine = MLXEngine()
+        #endif
     }
 
+    var modelName: String { engine.modelName }
+
     func loadModel() async {
-        guard container == nil, modelState != .ready else { return }
+        guard modelState != .ready else { return }
         modelState = .downloading(0)
-
-        // Cap MLX's GPU buffer cache so inference stays inside the iOS
-        // per-app memory budget.
-        MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
-
         do {
-            let container = try await #huggingFaceLoadModelContainer(
-                configuration: Self.model,
-                progressHandler: { progress in
-                    Task { @MainActor in
-                        self.modelState = .downloading(progress.fractionCompleted)
-                    }
-                }
-            )
-            self.container = container
-            startNewSession()
+            try await engine.load { fraction in
+                self.modelState = .downloading(fraction)
+            }
             modelState = .ready
         } catch {
             modelState = .failed(error.localizedDescription)
@@ -66,7 +45,7 @@ final class ChatStore {
 
     func send(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let session, !isGenerating, !trimmed.isEmpty else { return }
+        guard modelState == .ready, !isGenerating, !trimmed.isEmpty else { return }
 
         messages.append(ChatMessage(role: .user, text: trimmed))
         messages.append(ChatMessage(role: .assistant, text: ""))
@@ -75,7 +54,7 @@ final class ChatStore {
 
         generationTask = Task {
             do {
-                for try await chunk in session.streamResponse(to: trimmed) {
+                for try await chunk in engine.respond(to: trimmed) {
                     messages[index].text += chunk
                 }
             } catch is CancellationError {
@@ -91,15 +70,10 @@ final class ChatStore {
         generationTask?.cancel()
     }
 
-    /// New conversation: drop UI messages and the session's KV/history state.
+    /// New conversation: drop UI messages and the engine's history state.
     func clear() {
         stopGenerating()
         messages.removeAll()
-        startNewSession()
-    }
-
-    private func startNewSession() {
-        guard let container else { return }
-        session = ChatSession(container, instructions: Self.instructions)
+        engine.reset()
     }
 }

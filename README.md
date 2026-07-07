@@ -39,9 +39,19 @@ Airplane mode works fine after the first run.
 > account, delete it in Signing & Capabilities (or from
 > `ClawdChat/ClawdChat.entitlements`) — the 2B model usually still fits.
 
+## Agent loop (build → run → see, no hands)
+
+`tools/simloop.sh [out.png]` builds the app, boots an iPhone simulator,
+installs + launches the app, and writes a screenshot — so an agent (or CI)
+can verify changes visually without a human clicking Run. For driving taps
+and text input on the simulator: `brew install idb-companion && pipx install fb-idb`.
+Real-model verification still needs a physical iPhone (see above); once the
+phone has been trusted once, `xcrun devicectl` can install builds to it from
+the CLI too.
+
 ## Swapping the model
 
-Edit `ChatStore.model` in `ClawdChat/LLM/ChatStore.swift`:
+Edit `MLXEngine.model` in `ClawdChat/LLM/MLXEngine.swift`:
 
 ```swift
 static let model = LLMRegistry.qwen3_5_2b_4bit      // default
@@ -55,10 +65,15 @@ hub should work.
 
 ## How it works
 
-- `ChatStore` (`@Observable`) owns the model lifecycle:
-  `#huggingFaceLoadModelContainer` downloads/caches weights and returns a
-  `ModelContainer`; a `ChatSession` on top of it keeps multi-turn history and
-  streams tokens via `AsyncThrowingStream`.
+- `ChatStore` (`@Observable`) owns the message list and model lifecycle on
+  top of an `LLMEngine` protocol with two implementations:
+  - **`MLXEngine`** (device builds): `#huggingFaceLoadModelContainer`
+    downloads/caches weights and returns a `ModelContainer`; a `ChatSession`
+    on top keeps multi-turn history and streams tokens via
+    `AsyncThrowingStream`.
+  - **`MockEngine`** (simulator builds): MLX can't run in the simulator (no
+    Metal GPU), so sim builds stream a canned reply — the full UI stays
+    testable in automated simulator runs.
 - Qwen's `<think>…</think>` reasoning blocks are stripped for display
   (`ChatMessage.displayText`) and shown as a "Thinking…" indicator instead.
 - `MLX.GPU.set(cacheLimit:)` + the increased-memory-limit entitlement keep a
