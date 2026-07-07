@@ -41,6 +41,18 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         ITSAppUsesNonExemptEncryption: false
+        # Permission strings for the model's phone tools + voice input.
+        # iOS shows these in the grant dialog the first time each is used.
+        NSContactsUsageDescription: >-
+          Lets the on-device assistant look up your contacts when you ask it to.
+          Contact data never leaves your phone.
+        NSCalendarsFullAccessUsageDescription: >-
+          Lets the on-device assistant read your upcoming calendar events when
+          you ask it to. Calendar data never leaves your phone.
+        NSMicrophoneUsageDescription: >-
+          Voice input: dictate messages to the assistant instead of typing.
+        NSSpeechRecognitionUsageDescription: >-
+          Transcribes your voice to text entirely on this device.
     entitlements:
       path: ClawdChat/ClawdChat.entitlements
       properties:

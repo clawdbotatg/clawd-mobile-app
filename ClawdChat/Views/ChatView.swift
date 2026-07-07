@@ -3,6 +3,8 @@ import SwiftUI
 struct ChatView: View {
     let store: ChatStore
     @State private var draft = ""
+    @State private var speech = SpeechRecognizer()
+    @State private var draftBeforeDictation = ""
     @FocusState private var inputFocused: Bool
 
     var body: some View {
@@ -70,12 +72,27 @@ struct ChatView: View {
 
     private var composer: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            TextField("Message", text: $draft, axis: .vertical)
+            TextField(speech.isRecording ? "Listening…" : "Message", text: $draft, axis: .vertical)
                 .lineLimit(1...5)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 18))
                 .focused($inputFocused)
+                .onChange(of: speech.transcript) {
+                    guard speech.isRecording else { return }
+                    draft = draftBeforeDictation.isEmpty
+                        ? speech.transcript
+                        : draftBeforeDictation + " " + speech.transcript
+                }
+
+            Button {
+                if !speech.isRecording { draftBeforeDictation = draft }
+                speech.toggle()
+            } label: {
+                Image(systemName: speech.isRecording ? "mic.circle.fill" : "mic.circle")
+                    .font(.title)
+                    .foregroundStyle(speech.isRecording ? .red : .accentColor)
+            }
 
             if store.isGenerating {
                 Button {
@@ -86,6 +103,7 @@ struct ChatView: View {
                 }
             } else {
                 Button {
+                    if speech.isRecording { speech.stop() }
                     store.send(draft)
                     draft = ""
                 } label: {
@@ -110,9 +128,15 @@ struct ChatView: View {
                     Text("\(Int(fraction * 100))% of \(store.modelName)")
                 }
                 .padding(.horizontal, 40)
-                Text("One-time download — after this, everything runs offline.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "One-time download — after this, everything runs offline.\n"
+                        + "Most of the model is a single large file, so the percentage "
+                        + "can sit still for a long stretch while it downloads. Hang tight."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
             } else {
                 ProgressView("Preparing model…")
             }

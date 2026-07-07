@@ -22,6 +22,14 @@
 	<string>1</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Lets the on-device assistant read your upcoming calendar events when you ask it to. Calendar data never leaves your phone.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Lets the on-device assistant look up your contacts when you ask it to. Contact data never leaves your phone.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Voice input: dictate messages to the assistant instead of typing.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Transcribes your voice to text entirely on this device.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
