@@ -86,11 +86,28 @@ final class MLXEngine: LLMEngine {
         session = ChatSession(
             container,
             instructions: Self.instructions,
+            // Qwen's recommended sampling for instruct models; the repetition
+            // penalty stops the degenerate "2023 and 2024. 2023 and 2024. …"
+            // loops a 4-bit 4B model falls into after tool-result injection.
+            generateParameters: GenerateParameters(
+                temperature: 0.7,
+                topP: 0.8,
+                repetitionPenalty: 1.15,
+                repetitionContextSize: 64
+            ),
             tools: PhoneTools.specs + WebTools.specs + MoreTools.specs,
             toolDispatch: { call in
-                if let result = await WebTools.dispatch(call) { return result }
-                if let result = await MoreTools.dispatch(call) { return result }
-                return await PhoneTools.dispatch(call)
+                print("[ClawdChat] tool call: \(call.function.name) args: \(call.function.arguments)")
+                let result: String
+                if let webResult = await WebTools.dispatch(call) {
+                    result = webResult
+                } else if let moreResult = await MoreTools.dispatch(call) {
+                    result = moreResult
+                } else {
+                    result = await PhoneTools.dispatch(call)
+                }
+                print("[ClawdChat] tool result: \(result.prefix(300))")
+                return result
             }
         )
     }
@@ -99,7 +116,23 @@ final class MLXEngine: LLMEngine {
         guard let session else {
             return AsyncThrowingStream { $0.finish(throwing: EngineError.notLoaded) }
         }
-        return session.streamResponse(to: prompt, image: image.map { .ciImage($0) })
+        let upstream = session.streamResponse(to: prompt, image: image.map { .ciImage($0) })
+        // Debug tap: log raw chunks so `devicectl … launch --console` shows
+        // exactly what the model emits (special tokens, tool-call syntax, …).
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    for try await chunk in upstream {
+                        print("[ClawdChat] chunk: \(chunk.debugDescription)")
+                        continuation.yield(chunk)
+                    }
+                    continuation.finish()
+                } catch {
+                    print("[ClawdChat] stream error: \(error)")
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
     }
 
     enum EngineError: LocalizedError {
